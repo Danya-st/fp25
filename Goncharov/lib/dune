@@ -1,0 +1,20 @@
+(library
+ (name lambda_lib)
+ (public_name Goncharov.Lib)
+ (modules Ast Interpret Parser Pprintast utils)
+ (modules_without_implementation ast)
+ (libraries base angstrom)
+ (preprocess
+  (pps ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx)))
+
+(library
+ (name tests)
+ (modules tests)
+ (libraries lambda_lib qcheck)
+ (preprocess
+  (pps ppx_expect ppx_deriving.show))
+ (instrumentation
+  (backend bisect_ppx))
+ (inline_tests))
