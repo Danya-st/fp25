@@ -8,16 +8,34 @@
 
 open Lambda_lib
 
-let () =
-  let () =
-    let open Stdlib.Arg in
-    parse
-      []
-      (fun _ ->
-        Stdlib.Format.eprintf "Positioned arguments are not supported\n";
-        Stdlib.exit 1)
-      "Read-Eval-Print-Loop for Utyped Lambda Calculus"
+let extract_steps line =
+  let prefix = ":max_steps" in
+  let rest =
+    String.sub line (String.length prefix) (String.length line - String.length prefix)
+    |> String.trim
   in
-  let input = In_channel.(input_all stdin) |> String.trim in
-  Interpret.parse_and_run input
+  int_of_string rest
+;;
+
+
+let run_line max_steps line = Interpret.parse_and_run ~max_steps line
+
+let rec repl ~(max_steps : int) =
+  print_string "repl_miniml> ";
+  Out_channel.flush stdout;
+  match In_channel.input_line stdin with
+  | None -> ()
+  | Some line ->
+    (match String.trim line with
+     | line when String.equal line "" -> repl ~max_steps
+     | line when String.equal line ":quit" || String.equal line ":q" -> ()
+     | line when String.starts_with ~prefix:":max_steps" line ->
+       repl ~max_steps:(extract_steps line)
+     | _ ->
+       run_line max_steps line;
+       repl ~max_steps)
+;;
+
+let () =
+  repl ~max_steps:10000
 ;;

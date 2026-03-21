@@ -32,12 +32,11 @@ let rec to_src = function
   | Int i -> string_of_int i
   | Neg e -> "(-" ^ to_src e ^ ")"
   | Bin (op, l, r) -> "(" ^ to_src l ^ " " ^ binop_to_string op ^ " " ^ to_src r ^ ")"
-  | Fun (x, e) -> "fun " ^ x ^ " -> " ^ to_src e
+  | Fun (x, e) -> "(fun " ^ x ^ " -> " ^ to_src e ^ ")"
   | App (f, a) -> "(" ^ to_src f ^ " " ^ to_src a ^ ")"
   | Let (x, e1, e2) -> "(let " ^ x ^ " = " ^ to_src e1 ^ " in " ^ to_src e2 ^ ")"
   | LetRec (f, e1, e2) -> "(let rec " ^ f ^ " = " ^ to_src e1 ^ " in " ^ to_src e2 ^ ")"
   | If (c, t, e) -> "(if " ^ to_src c ^ " then " ^ to_src t ^ " else " ^ to_src e ^ ")"
-  | Fix -> "fix"
 ;;
 
 let rec equal a b =
@@ -52,7 +51,6 @@ let rec equal a b =
   | LetRec (f1, e1, b1), LetRec (f2, e2, b2) ->
     String.equal f1 f2 && equal e1 e2 && equal b1 b2
   | If (c1, t1, e1), If (c2, t2, e2) -> equal c1 c2 && equal t1 t2 && equal e1 e2
-  | Fix, Fix -> true
   | _ -> false
 ;;
 
@@ -69,8 +67,7 @@ let rec gen_ast depth =
   let base = 
     oneof [
       map  (fun v  -> Ast.Var v)   var_gen;
-      map  (fun i  -> Ast.Int i)   (int_bound 10);   (* можно чуть увеличить *)
-      return Ast.Fix;
+      map  (fun i  -> Ast.Int i)   (int_bound 10);  
     ] 
   in
 
@@ -79,42 +76,41 @@ let rec gen_ast depth =
     oneof [
       base;
 
-      (* fun только с одним аргументом *)
       map2 (fun x body -> Ast.Fun (x, body))
         var_gen
         (gen_ast (depth - 1));
 
-      (* приложение *)
+
       map2 (fun f a -> Ast.App (f, a))
         (gen_ast (depth - 1))
         (gen_ast (depth - 1));
 
-      (* бинарные операции *)
+
       map3 (fun op l r -> Ast.Bin (op, l, r))
         binop_gen
         (gen_ast (depth - 1))
         (gen_ast (depth - 1));
 
-      (* let *)
+
       map3 (fun x e1 e2 -> Ast.Let (x, e1, e2))
         var_gen
         (gen_ast (depth - 1))
         (gen_ast (depth - 1));
 
-      (* let rec — тоже только один аргумент в функции *)
+
       map4 (fun f x body e2 -> Ast.LetRec (f, Ast.Fun (x, body), e2))
         var_gen
         var_gen
         (gen_ast (depth - 1))
         (gen_ast (depth - 1));
 
-      (* if *)
+
       map3 (fun c t e -> Ast.If (c, t, e))
         (gen_ast (depth - 1))
         (gen_ast (depth - 1))
         (gen_ast (depth - 1));
 
-      (* унарный минус — добавим для полноты *)
+
       map (fun e -> Ast.Neg e) (gen_ast (depth - 1));
     ]
 

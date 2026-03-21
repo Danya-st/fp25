@@ -27,7 +27,7 @@ let varname =
   match var with
   | s when s.[0] >= '0' && s.[0] <= '9' -> fail "variable starts with number"
   | s when s.[0] = '\'' -> fail "variable starts with wrong symbol"
-  | "_" | "fun" | "if" | "then" | "else" | "let" | "in" | "rec" | "fix" -> fail"key word instead of variable"
+  | "fun" | "if" | "then" | "else" | "let" | "in" | "rec" -> fail"key word instead of variable"
   | _ -> return var
 ;;
 
@@ -67,7 +67,7 @@ let mk_args args body =
   List.fold_right (fun arg acc -> Ast.Fun (arg, acc)) args body
 ;;
 
-type error = [ `Parsing_error of string ]
+type error = Parsing_error of string 
 
 
 let parse_lam =
@@ -75,12 +75,11 @@ let parse_lam =
     fix (fun _ ->
       conde
         [ (token (char '(') *> pack.comp pack <* token (char ')')) <?> "Parentheses expected"
-        ; (token (string "let") *> token varname >>= fun name -> many(token varname) >>= fun args -> token (char '=') *> pack.comp pack >>= fun bind -> token (string "in") *> pack.comp pack >>| fun body -> Ast.Let(name,mk_args args bind,body))
-        ; (token (string "fun") *> many1(token varname) <* token (string "->") >>= fun args -> pack.comp pack >>| fun body -> (mk_args args body))
+        ; (token (string "let" *> spaces1) *> token varname >>= fun name -> many(token varname) >>= fun args -> token (char '=') *> pack.comp pack >>= fun bind -> token (string "in") *> pack.comp pack >>| fun body -> Ast.Let(name,mk_args args bind,body))
+        ; (token (string "fun"*> spaces1) *> many1(token varname) <* token (string "->") >>= fun args -> pack.comp pack >>| fun body -> (mk_args args body))
         ; ((many1(token varname) <* token (string "->") >>= fun args -> pack.comp pack >>| fun body -> (mk_args args body)))
-        ; (token (string "if") *> pack.comp pack >>= fun cond -> token (string "then")*> pack.comp pack>>= fun e1 -> token (string "else") *> pack.comp pack >>| fun e2 ->Ast.If(cond,e1,e2))
-        ; (token (string "fix") *> return Ast.Fix)
-        ; (token (string "let") *> token (string "rec") *> token varname >>= fun name -> many(token varname) >>= fun args -> token (char '=') *> pack.comp pack >>= fun bind -> token (string "in") *> pack.comp pack >>| fun body -> Ast.LetRec(name,mk_args args bind,body))
+        ; (token (string "if" *> spaces1) *> pack.comp pack >>= fun cond -> token (string "then")*> pack.comp pack>>= fun e1 -> token (string "else") *> pack.comp pack >>| fun e2 ->Ast.If(cond,e1,e2))
+        ; (token (string "let") *> token1 (string "rec") *> token varname >>= fun name -> many(token varname) >>= fun args -> token (char '=') *> pack.comp pack >>= fun bind -> token (string "in") *> pack.comp pack >>| fun body -> Ast.LetRec(name,mk_args args bind,body))
         ; (token  varname >>| fun var -> Ast.Var(var))
         ; ((token integer) >>| fun num -> Ast.Int(num))
         ])
@@ -93,7 +92,7 @@ let parse_lam =
   and unary pack = 
     fix(fun _ ->
     (token (char '-')*> pack.apps pack >>| fun e ->Ast.Neg(e))
-    <|> token (char '+')*> pack.apps pack <|> pack.apps pack)
+    <|> (token (char '+')*> pack.apps pack <|> pack.apps pack))
   and mul_div pack = 
     let op = 
       conde
@@ -110,10 +109,10 @@ let parse_lam =
     let op = 
       conde
       [(token (string "<=")*> return (fun l r -> Ast.Bin(Ast.Leq,l,r)))
-       ;(token (string "=")*> return (fun l r -> Ast.Bin(Ast.Eq,l,r)))
+       ;(token (string "<>")*> return (fun l r -> Ast.Bin(Ast.Neq,l,r)))
        ;(token (string ">=")*> return (fun l r -> Ast.Bin(Ast.Geq,l,r)))
        ;(token (string "<")*> return (fun l r -> Ast.Bin(Ast.Lt,l,r)))
-       ;(token (string "<>")*> return (fun l r -> Ast.Bin(Ast.Neq,l,r)))
+       ;(token (string "=")*> return (fun l r -> Ast.Bin(Ast.Eq,l,r)))
        ;(token (string ">")*> return (fun l r -> Ast.Bin(Ast.Gt,l,r)))]
     in chainl1(pack.add_sub pack) op
   in
@@ -125,5 +124,5 @@ let parse str =
     Angstrom.parse_string (parse_lam.comp parse_lam) ~consume:Angstrom.Consume.All str
   with
   | Result.Ok x -> Result.Ok x
-  | Error er -> Result.Error (`Parsing_error er)
+  | Error er -> Result.Error (Parsing_error er)
 ;;

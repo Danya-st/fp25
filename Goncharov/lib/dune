@@ -1,7 +1,7 @@
 (library
  (name lambda_lib)
  (public_name Goncharov.Lib)
- (modules Ast Interpret Parser Pprintast utils)
+ (modules Ast Interpret Parser Pprintast)
  (modules_without_implementation ast)
  (libraries base angstrom)
  (preprocess

@@ -30,8 +30,5 @@ type 'name t =
   | If of 'name t * 'name t * 'name t
   | Let of 'name * 'name t * 'name t 
   | LetRec of 'name * 'name t * 'name t 
-  | Fix
 
-(* Application [f g ] *)
-(** In type definition above the 3rd constructor is intentionally without documentation
-    to test linter *)
+

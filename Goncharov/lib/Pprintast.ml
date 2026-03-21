@@ -32,6 +32,5 @@ let rec pp fmt = function
   | If (e1,e2,e3) -> Format.fprintf fmt "(if %a then %a else %a)" pp e1 pp e2 pp e3
   | Let (x,e1,e2) -> Format.fprintf fmt "(let %s = %a in %a)" x pp e1 pp e2
   | LetRec (f,e1,e2) -> Format.fprintf fmt "(let rec %s = %a in %a)" f pp e1 pp e2
-  | Fix -> Format.fprintf fmt "fix"
 ;;
 let pp_hum = pp
