@@ -26,7 +26,6 @@ let binop_to_string =
     | Gt -> ">")
 ;;
 
-
 let rec to_src = function
   | Ast.Var v -> v
   | Int i -> string_of_int i
@@ -64,55 +63,40 @@ let pprint_to_string ast = Format.asprintf "%a" Pprintast.pp ast
 
 let rec gen_ast depth =
   let open QCheck2.Gen in
-  let base = 
-    oneof [
-      map  (fun v  -> Ast.Var v)   var_gen;
-      map  (fun i  -> Ast.Int i)   (int_bound 10);  
-    ] 
+  let base =
+    oneof [ map (fun v -> Ast.Var v) var_gen; map (fun i -> Ast.Int i) (int_bound 10) ]
   in
-
-  if depth <= 0 then base
+  if depth <= 0
+  then base
   else
-    oneof [
-      base;
-
-      map2 (fun x body -> Ast.Fun (x, body))
-        var_gen
-        (gen_ast (depth - 1));
-
-
-      map2 (fun f a -> Ast.App (f, a))
-        (gen_ast (depth - 1))
-        (gen_ast (depth - 1));
-
-
-      map3 (fun op l r -> Ast.Bin (op, l, r))
-        binop_gen
-        (gen_ast (depth - 1))
-        (gen_ast (depth - 1));
-
-
-      map3 (fun x e1 e2 -> Ast.Let (x, e1, e2))
-        var_gen
-        (gen_ast (depth - 1))
-        (gen_ast (depth - 1));
-
-
-      map4 (fun f x body e2 -> Ast.LetRec (f, Ast.Fun (x, body), e2))
-        var_gen
-        var_gen
-        (gen_ast (depth - 1))
-        (gen_ast (depth - 1));
-
-
-      map3 (fun c t e -> Ast.If (c, t, e))
-        (gen_ast (depth - 1))
-        (gen_ast (depth - 1))
-        (gen_ast (depth - 1));
-
-
-      map (fun e -> Ast.Neg e) (gen_ast (depth - 1));
-    ]
+    oneof
+      [ base
+      ; map2 (fun x body -> Ast.Fun (x, body)) var_gen (gen_ast (depth - 1))
+      ; map2 (fun f a -> Ast.App (f, a)) (gen_ast (depth - 1)) (gen_ast (depth - 1))
+      ; map3
+          (fun op l r -> Ast.Bin (op, l, r))
+          binop_gen
+          (gen_ast (depth - 1))
+          (gen_ast (depth - 1))
+      ; map3
+          (fun x e1 e2 -> Ast.Let (x, e1, e2))
+          var_gen
+          (gen_ast (depth - 1))
+          (gen_ast (depth - 1))
+      ; map4
+          (fun f x body e2 -> Ast.LetRec (f, Ast.Fun (x, body), e2))
+          var_gen
+          var_gen
+          (gen_ast (depth - 1))
+          (gen_ast (depth - 1))
+      ; map3
+          (fun c t e -> Ast.If (c, t, e))
+          (gen_ast (depth - 1))
+          (gen_ast (depth - 1))
+          (gen_ast (depth - 1))
+      ; map (fun e -> Ast.Neg e) (gen_ast (depth - 1))
+      ]
+;;
 
 let gen_ast_sized =
   let open Gen in

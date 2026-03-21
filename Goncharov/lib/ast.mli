@@ -3,7 +3,7 @@
 (** Copyright 2021-2024, Kakadu and contributors *)
 
 (** SPDX-License-Identifier: LGPL-3.0-or-later *)
-type binop = 
+type binop =
   | Add
   | Sub
   | Mul
@@ -11,7 +11,7 @@ type binop =
   | Eq
   | Leq
   | Geq
-  | Lt 
+  | Lt
   | Gt
   | Neq
 
@@ -24,9 +24,9 @@ type 'name t =
   | Var of 'name (** Variable [x] *)
   | Fun of 'name * 'name t (** fun **)
   | App of 'name t * 'name t (** Application [f g] *)
-  | Int of int 
+  | Int of int
   | Neg of 'name t
   | Bin of binop * 'name t * 'name t
   | If of 'name t * 'name t * 'name t
-  | Let of 'name * 'name t * 'name t 
-  | LetRec of 'name * 'name t * 'name t 
+  | Let of 'name * 'name t * 'name t
+  | LetRec of 'name * 'name t * 'name t

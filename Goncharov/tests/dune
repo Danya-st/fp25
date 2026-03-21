@@ -4,6 +4,7 @@
  (libraries lambda_lib base)
  (instrumentation
   (backend bisect_ppx)))
+
 (cram
  (applies_to mini_ml)
  (deps ./mini_cli.exe))

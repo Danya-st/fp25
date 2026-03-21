@@ -17,7 +17,6 @@ let extract_steps line =
   int_of_string rest
 ;;
 
-
 let run_line max_steps line = Interpret.parse_and_run ~max_steps line
 
 let rec repl ~(max_steps : int) =
@@ -36,6 +35,4 @@ let rec repl ~(max_steps : int) =
        repl ~max_steps)
 ;;
 
-let () =
-  repl ~max_steps:10000
-;;
+let () = repl ~max_steps:10000
