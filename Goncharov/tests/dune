@@ -7,3 +7,4 @@
 (cram
  (applies_to mini_ml)
  (deps ./mini_cli.exe))
+ 
