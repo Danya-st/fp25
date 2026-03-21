@@ -33,7 +33,6 @@ end = struct
 
   let return x = Ok x
   let fail x = Error x
-  let ( >>= ) = ( let* )
 
   type value =
     | VInt of int

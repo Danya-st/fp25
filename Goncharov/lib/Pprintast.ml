@@ -35,5 +35,3 @@ let rec pp fmt = function
   | Let (x, e1, e2) -> Format.fprintf fmt "(let %s = %a in %a)" x pp e1 pp e2
   | LetRec (f, e1, e2) -> Format.fprintf fmt "(let rec %s = %a in %a)" f pp e1 pp e2
 ;;
-
-let pp_hum = pp
